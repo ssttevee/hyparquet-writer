@@ -1,7 +1,6 @@
 import fs from 'fs'
 import { ByteWriter } from './bytewriter.js'
 import { ParquetStream } from './parquet-stream.js'
-import { parquetWrite } from './write.js'
 import { schemaFromColumnData } from './schema.js'
 
 export * from './index.js'
@@ -13,16 +12,16 @@ export * from './index.js'
  * @param {Omit<ParquetWriteOptions, 'writer'> & {filename: string}} options
  */
 export function parquetWriteFile(options) {
-  const { 
-    filename, 
-    columnData, 
-    schema, 
-    codec = 'SNAPPY', 
-    compressors, 
-    statistics = true, 
-    rowGroupSize = [1000, 100000], 
-    kvMetadata, 
-    pageSize = 1048576 
+  const {
+    filename,
+    columnData,
+    schema,
+    codec = 'SNAPPY',
+    compressors,
+    statistics = true,
+    rowGroupSize = [1000, 100000],
+    kvMetadata,
+    pageSize = 1048576,
   } = options
 
   let finalSchema = schema

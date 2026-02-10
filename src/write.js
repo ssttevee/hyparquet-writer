@@ -64,7 +64,7 @@ export function parquetWrite({
  */
 export function parquetWriteBuffer(options) {
   const { columnData, schema, codec = 'SNAPPY', compressors, statistics = true, rowGroupSize = [1000, 100000], kvMetadata, pageSize = 1048576 } = options
-  
+
   let finalSchema = schema
   if (!finalSchema) {
     finalSchema = schemaFromColumnData({ columnData })
@@ -82,7 +82,7 @@ export function parquetWriteBuffer(options) {
 
   // Collect all chunks
   const chunks = []
-  
+
   // Header
   chunks.push(stream.createHeaderBytes())
 
