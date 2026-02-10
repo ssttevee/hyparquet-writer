@@ -61,7 +61,7 @@ export class ParquetStream {
    */
   createRowGroupBytes(columnData, options = {}) {
     const { pageSize = 1048576 } = options
-    
+
     const writer = new ByteWriter()
     // Set the writer's offset to match our absolute offset
     writer.offset = this.offset

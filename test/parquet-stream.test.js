@@ -11,7 +11,7 @@ describe('ParquetStream', () => {
     ]
     const stream = new ParquetStream({ schema })
     const headerBytes = stream.createHeaderBytes()
-    
+
     expect(headerBytes).toBeInstanceOf(Uint8Array)
     expect(headerBytes.byteLength).toBe(4)
     // Check PAR1 magic
@@ -25,10 +25,10 @@ describe('ParquetStream', () => {
     const columnData = [{ name: 'int', data: [1, 2, 3, 4] }]
     const schema = schemaFromColumnData({ columnData })
     const stream = new ParquetStream({ schema })
-    
+
     stream.createHeaderBytes() // Initialize offset
     const rowGroupBytes = stream.createRowGroupBytes(columnData)
-    
+
     expect(rowGroupBytes).toBeInstanceOf(Uint8Array)
     expect(rowGroupBytes.byteLength).toBeGreaterThan(0)
     expect(stream.num_rows).toBe(4n)
@@ -39,11 +39,11 @@ describe('ParquetStream', () => {
     const columnData = [{ name: 'int', data: [1, 2, 3, 4] }]
     const schema = schemaFromColumnData({ columnData })
     const stream = new ParquetStream({ schema })
-    
+
     stream.createHeaderBytes()
     stream.createRowGroupBytes(columnData)
     const footerBytes = stream.createFooterBytes()
-    
+
     expect(footerBytes).toBeInstanceOf(Uint8Array)
     expect(footerBytes.byteLength).toBeGreaterThan(0)
     // Check trailing PAR1 magic at end
@@ -61,14 +61,14 @@ describe('ParquetStream', () => {
     ]
     const schema = schemaFromColumnData({ columnData })
     const stream = new ParquetStream({ schema })
-    
+
     // Collect all chunks
     const chunks = [
       stream.createHeaderBytes(),
       stream.createRowGroupBytes(columnData),
       stream.createFooterBytes(),
     ]
-    
+
     // Combine chunks into single buffer
     const totalLength = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0)
     const buffer = new ArrayBuffer(totalLength)
@@ -78,13 +78,13 @@ describe('ParquetStream', () => {
       view.set(chunk, offset)
       offset += chunk.byteLength
     }
-    
+
     // Verify it's a valid parquet file
     const metadata = parquetMetadata(buffer)
     expect(metadata.num_rows).toBe(4n)
     expect(metadata.row_groups.length).toBe(1)
     expect(metadata.row_groups[0].num_rows).toBe(4n)
-    
+
     // Verify data round-trips correctly
     const result = await parquetReadObjects({ file: buffer })
     expect(result).toEqual([
@@ -99,10 +99,10 @@ describe('ParquetStream', () => {
     const columnData1 = [{ name: 'int', data: [1, 2, 3] }]
     const columnData2 = [{ name: 'int', data: [4, 5, 6] }]
     const columnData3 = [{ name: 'int', data: [7, 8, 9] }]
-    
+
     const schema = schemaFromColumnData({ columnData: columnData1 })
     const stream = new ParquetStream({ schema })
-    
+
     // Collect all chunks
     const chunks = [
       stream.createHeaderBytes(),
@@ -111,7 +111,7 @@ describe('ParquetStream', () => {
       stream.createRowGroupBytes(columnData3),
       stream.createFooterBytes(),
     ]
-    
+
     // Combine chunks
     const totalLength = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0)
     const buffer = new ArrayBuffer(totalLength)
@@ -121,7 +121,7 @@ describe('ParquetStream', () => {
       view.set(chunk, offset)
       offset += chunk.byteLength
     }
-    
+
     // Verify
     const metadata = parquetMetadata(buffer)
     expect(metadata.num_rows).toBe(9n)
@@ -129,7 +129,7 @@ describe('ParquetStream', () => {
     expect(metadata.row_groups[0].num_rows).toBe(3n)
     expect(metadata.row_groups[1].num_rows).toBe(3n)
     expect(metadata.row_groups[2].num_rows).toBe(3n)
-    
+
     const result = await parquetReadObjects({ file: buffer })
     expect(result).toEqual([
       { int: 1 }, { int: 2 }, { int: 3 },
@@ -142,19 +142,19 @@ describe('ParquetStream', () => {
     const columnData = [{ name: 'string', data: ['test'.repeat(100)] }]
     const schema = schemaFromColumnData({ columnData })
     const stream = new ParquetStream({ schema })
-    
+
     const header = stream.createHeaderBytes()
     const headerOffset = stream.offset
     expect(headerOffset).toBe(4) // PAR1 magic
-    
+
     const rowGroup = stream.createRowGroupBytes(columnData)
     const rowGroupOffset = stream.offset
     expect(rowGroupOffset).toBe(headerOffset + rowGroup.byteLength)
-    
+
     const footer = stream.createFooterBytes()
     const finalOffset = stream.offset
     expect(finalOffset).toBe(rowGroupOffset + footer.byteLength)
-    
+
     // Combine and verify
     const totalLength = header.byteLength + rowGroup.byteLength + footer.byteLength
     const buffer = new ArrayBuffer(totalLength)
@@ -162,27 +162,27 @@ describe('ParquetStream', () => {
     view.set(header, 0)
     view.set(rowGroup, header.byteLength)
     view.set(footer, header.byteLength + rowGroup.byteLength)
-    
+
     // Should be able to read the file
     const result = await parquetReadObjects({ file: buffer })
     expect(result.length).toBe(1)
     expect(result[0].string).toBe('test'.repeat(100))
   })
 
-  it('supports custom codec and compressors', async () => {
+  it('supports custom codec and compressors', () => {
     const columnData = [{ name: 'int', data: [1, 2, 3] }]
     const schema = schemaFromColumnData({ columnData })
-    const stream = new ParquetStream({ 
-      schema, 
-      codec: 'UNCOMPRESSED' 
+    const stream = new ParquetStream({
+      schema,
+      codec: 'UNCOMPRESSED',
     })
-    
+
     const chunks = [
       stream.createHeaderBytes(),
       stream.createRowGroupBytes(columnData),
       stream.createFooterBytes(),
     ]
-    
+
     const totalLength = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0)
     const buffer = new ArrayBuffer(totalLength)
     const view = new Uint8Array(buffer)
@@ -191,30 +191,30 @@ describe('ParquetStream', () => {
       view.set(chunk, offset)
       offset += chunk.byteLength
     }
-    
+
     const metadata = parquetMetadata(buffer)
     expect(metadata.row_groups[0].columns[0].meta_data?.codec).toBe('UNCOMPRESSED')
   })
 
-  it('supports statistics and kvMetadata', async () => {
+  it('supports statistics and kvMetadata', () => {
     const columnData = [{ name: 'int', data: [1, 2, 3] }]
     const schema = schemaFromColumnData({ columnData })
     const kvMetadata = [
       { key: 'test_key', value: 'test_value' },
       { key: 'another_key', value: 'another_value' },
     ]
-    const stream = new ParquetStream({ 
-      schema, 
+    const stream = new ParquetStream({
+      schema,
       statistics: true,
-      kvMetadata 
+      kvMetadata,
     })
-    
+
     const chunks = [
       stream.createHeaderBytes(),
       stream.createRowGroupBytes(columnData),
       stream.createFooterBytes(),
     ]
-    
+
     const totalLength = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0)
     const buffer = new ArrayBuffer(totalLength)
     const view = new Uint8Array(buffer)
@@ -223,7 +223,7 @@ describe('ParquetStream', () => {
       view.set(chunk, offset)
       offset += chunk.byteLength
     }
-    
+
     const metadata = parquetMetadata(buffer)
     expect(metadata.key_value_metadata).toEqual(kvMetadata)
     expect(metadata.row_groups[0].columns[0].meta_data?.statistics).toBeDefined()
@@ -236,13 +236,13 @@ describe('ParquetStream', () => {
     ]
     const schema = schemaFromColumnData({ columnData })
     const stream = new ParquetStream({ schema })
-    
+
     const chunks = [
       stream.createHeaderBytes(),
       stream.createRowGroupBytes(columnData),
       stream.createFooterBytes(),
     ]
-    
+
     const totalLength = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0)
     const buffer = new ArrayBuffer(totalLength)
     const view = new Uint8Array(buffer)
@@ -251,7 +251,7 @@ describe('ParquetStream', () => {
       view.set(chunk, offset)
       offset += chunk.byteLength
     }
-    
+
     const result = await parquetReadObjects({ file: buffer })
     expect(result).toEqual([
       { list: [1, 2, 3], obj: { a: 1, b: 2 } },
